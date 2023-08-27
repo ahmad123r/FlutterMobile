@@ -24,7 +24,7 @@ class ExpenseItem extends StatelessWidget {
           children: [
             IconButton(
               icon: Icon(Icons.edit),
-              onPressed: onEdit, // Call the onEdit function
+              onPressed: onEdit,
             ),
             IconButton(
               icon: Icon(Icons.delete),

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'expenses_list_page.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
+class ExpensesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -13,7 +9,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ExpensesListPage(expenses: []), // Pass your list of expenses here
+      home: ExpensesListPage(
+        expenses: [], // Initialize with your list of expenses
+      ),
     );
   }
 }

@@ -1,14 +1,11 @@
-// TODO: Save the newExpense using an appropriate method
-// For example, you could have a list of expenses in your main_bloc.dart or a separate ExpensesProvider
-// You can add the newExpense to the list and then notify listeners to update the UI
-// Or you could use a service class to handle data management (e.g., FirebaseService)
-// For now, let's assume you have a list of expenses in your main_bloc.dart:
-
 import 'package:flutter/material.dart';
 import 'expense.dart';
-import 'main_bloc.dart'; // Import your main bloc or provider
 
 class AddExpensePage extends StatefulWidget {
+  final Expense? editedExpense;
+
+  AddExpensePage({this.editedExpense});
+
   @override
   _AddExpensePageState createState() => _AddExpensePageState();
 }
@@ -17,20 +14,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final _formKey = GlobalKey<FormState>();
   late String _title;
   late double _amount;
-  late DateTime _selectedDate = DateTime.now();
-  final Expense? editedExpense;
-
-  _AddExpensePageState({this.editedExpense});
+  late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    _title = editedExpense?.title ??
-        ''; // Initialize to the provided value or an empty string
-    _amount =
-        editedExpense?.amount ?? 0.0; // Initialize to the provided value or 0.0
-    _selectedDate = editedExpense?.date ??
-        DateTime.now(); // Initialize to the provided value or current date
+    _title = widget.editedExpense?.title ?? '';
+    _amount = widget.editedExpense?.amount ?? 0.0;
+    _selectedDate = widget.editedExpense?.date ?? DateTime.now();
   }
 
   void _submitForm() {
@@ -43,9 +34,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
         date: _selectedDate,
       );
 
-      mainBloc.addExpense(newExpense);
-
-      Navigator.pop(context); // Return to the Expenses List page
+      Navigator.pop(context,
+          newExpense); // Pass the newExpense back to the previous screen
     }
   }
 
@@ -53,7 +43,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Expense'),
+        title:
+            Text(widget.editedExpense != null ? 'Edit Expense' : 'Add Expense'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -63,6 +54,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
+                initialValue: _title,
                 decoration: InputDecoration(labelText: 'Title'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -73,6 +65,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 onSaved: (value) => _title = value!,
               ),
               TextFormField(
+                initialValue: _amount.toString(),
                 decoration: InputDecoration(labelText: 'Amount'),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
@@ -91,7 +84,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 onPressed: () {
                   showDatePicker(
                     context: context,
-                    initialDate: DateTime.now(),
+                    initialDate: _selectedDate,
                     firstDate: DateTime(2000),
                     lastDate: DateTime.now(),
                   ).then((pickedDate) {
@@ -102,14 +95,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     }
                   });
                 },
-                child: Text(_selectedDate == null
-                    ? 'Select Date'
-                    : 'Date: ${_selectedDate.toString()}'),
+                child: Text('Date: ${_selectedDate.toString()}'),
               ),
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _submitForm,
-                child: Text('Add Expense'),
+                child: Text(widget.editedExpense != null
+                    ? 'Save Changes'
+                    : 'Add Expense'),
               ),
             ],
           ),
