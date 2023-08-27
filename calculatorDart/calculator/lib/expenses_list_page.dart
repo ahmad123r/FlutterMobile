@@ -1,7 +1,11 @@
+import 'package:calculator/edit_expense_page.dart';
 import 'package:flutter/material.dart';
 import 'expense.dart';
 import 'expense_item.dart';
 import 'add_expense_page.dart';
+import 'main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Import Firestore
 
 class ExpensesListPage extends StatefulWidget {
   final List<Expense> expenses;
@@ -14,17 +18,25 @@ class ExpensesListPage extends StatefulWidget {
 
 class _ExpensesListPageState extends State<ExpensesListPage> {
   List<Expense> _filteredExpenses = [];
+  late List<Expense> _expenses = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _filteredExpenses = widget.expenses;
-  }
+  void _deleteExpense(int index) async {
+    // Get the expense that needs to be deleted
 
-  void _deleteExpense(int index) {
-    setState(() {
-      widget.expenses.removeAt(index);
-      _filteredExpenses = widget.expenses;
+    Expense expenseToDelete = _filteredExpenses[index];
+
+    // Get a reference to the Firestore collection
+    CollectionReference expensesCollection =
+        FirebaseFirestore.instance.collection('expenses');
+
+    // Query for the expense document to be deleted
+    QuerySnapshot snapshot = await expensesCollection
+        .where('title', isEqualTo: expenseToDelete.title)
+        .get();
+
+    // Delete the document
+    snapshot.docs.forEach((doc) {
+      doc.reference.delete();
     });
   }
 
@@ -41,9 +53,35 @@ class _ExpensesListPageState extends State<ExpensesListPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddExpensePage(editedExpense: expense),
+        builder: (context) => EditExpensePage(editedExpense: expense),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExpenses(); // Fetch expenses when the widget initializes
+  }
+
+  Future<void> _fetchExpenses() async {
+    // Fetch expenses from Firestore
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('expenses').get();
+
+    // Convert fetched data to Expense objects
+    List<Expense> fetchedExpenses = snapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      return Expense(
+        title: data['title'],
+        amount: data['amount'],
+        date: data['date'].toDate(),
+      );
+    }).toList();
+
+    setState(() {
+      _expenses = fetchedExpenses;
+    });
   }
 
   @override
@@ -66,12 +104,12 @@ class _ExpensesListPageState extends State<ExpensesListPage> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _filteredExpenses.length,
+              itemCount: _expenses.length,
               itemBuilder: (context, index) {
                 return ExpenseItem(
-                  expense: _filteredExpenses[index],
+                  expense: _expenses[index],
                   onDelete: () => _deleteExpense(index),
-                  onEdit: () => _editExpense(_filteredExpenses[index]),
+                  onEdit: () => _editExpense(_expenses[index]),
                 );
               },
             ),

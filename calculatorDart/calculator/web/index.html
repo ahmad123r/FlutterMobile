@@ -31,7 +31,23 @@
 
   <title>calculator</title>
   <link rel="manifest" href="manifest.json">
+<script type="module">
+  import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+const firebaseConfig = {
+  apiKey: "AIzaSyCREtpR7qF5l43IZQ8iB4O-mM47AU3tCx4",
+  authDomain: "taksquiz.firebaseapp.com",
+  projectId: "taksquiz",
+  storageBucket: "taksquiz.appspot.com",
+  messagingSenderId: "1086277915400",
+  appId: "1:1086277915400:web:6f2919bda39331dc1412bd",
+  measurementId: "G-STLVJ1WY8D"
+};
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+</script>
   <script>
     // The value below is injected by flutter build, do not touch.
     const serviceWorkerVersion = null;

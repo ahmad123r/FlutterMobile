@@ -1,5 +1,9 @@
+import 'package:calculator/main.dart';
 import 'package:flutter/material.dart';
 import 'expense.dart';
+import 'main.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddExpensePage extends StatefulWidget {
   final Expense? editedExpense;
@@ -24,7 +28,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
     _selectedDate = widget.editedExpense?.date ?? DateTime.now();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
@@ -34,8 +38,25 @@ class _AddExpensePageState extends State<AddExpensePage> {
         date: _selectedDate,
       );
 
-      Navigator.pop(context,
-          newExpense); // Pass the newExpense back to the previous screen
+      // Get a reference to the Firestore collection
+      CollectionReference expensesCollection =
+          FirebaseFirestore.instance.collection('expenses');
+
+      // Add the newExpense to the Firestore collection
+      await expensesCollection.add({
+        'title': newExpense.title,
+        'amount': newExpense.amount,
+        'date': newExpense.date,
+      });
+
+      Navigator.pop(context, newExpense);
+      // Pass the newExpense back to the previous screen
+      Navigator.push(context, MaterialPageRoute(builder: (context) => MyApp()));
+      expenses.add(newExpense);
+
+      print(newExpense.amount);
+      print(newExpense.date);
+      print(newExpense.title);
     }
   }
 
@@ -43,8 +64,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.editedExpense != null ? 'Edit Expense' : 'Add Expense'),
+        title: Text(
+            widget.editedExpense != null ? 'Edit Expense' : 'Add Expense>>'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
