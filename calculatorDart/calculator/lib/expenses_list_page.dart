@@ -1,18 +1,18 @@
 import 'dart:html';
 
-import 'package:calculator/edit_expense_page.dart';
+import 'package:calculator/Screens/edit_expense_page.dart';
 import 'package:flutter/material.dart';
-import 'expense.dart';
-import 'expense_item.dart';
-import 'add_expense_page.dart';
+import 'Models/expense.dart';
+import 'widgets/expense_item.dart';
+import 'Screens/add_expense_page.dart';
 import 'main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'chartwid.dart';
+import 'chart/chartwid.dart';
 // Import Firestore
 
 class ExpensesListPage extends StatefulWidget {
   final List<Expense> expenses;
-
+  var cv = "fetchedExpenses[index].title";
   ExpensesListPage({required this.expenses});
 
   @override
@@ -46,7 +46,8 @@ class _ExpensesListPageState extends State<ExpensesListPage> {
         return ExpenseItem(
           expense: fetchedExpenses[index],
           onDelete: () => _deleteExpense(fetchedExpenses[index].title),
-          onEdit: () => (),
+          onEdit: () =>
+              _editExpense(snapshot.docs[index].id, fetchedExpenses[index]),
         );
       },
     );
@@ -65,6 +66,24 @@ class _ExpensesListPageState extends State<ExpensesListPage> {
             .snapshots();
       }
     });
+  }
+
+  void _editExpense(String documentId, Expense updatedExpense) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('expenses')
+          .doc(documentId)
+          .update({
+        'title': updatedExpense.title,
+        'amount': updatedExpense.amount,
+        'date': updatedExpense.date,
+      });
+
+      _fetchExpenses(); // Refresh the expenses list
+      print('Document updated successfully');
+    } catch (error) {
+      print('Error updating document: $error');
+    }
   }
 
   List<Expense> _filteredExpenses = [];

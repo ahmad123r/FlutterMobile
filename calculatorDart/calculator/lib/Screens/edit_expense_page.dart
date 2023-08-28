@@ -1,9 +1,9 @@
 import 'package:calculator/main.dart';
 import 'package:flutter/material.dart';
-import 'expense.dart';
-import 'main.dart';
+import '../Models/expense.dart';
+import '../main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'chartwid.dart';
+import '../chart/chartwid.dart';
 
 class EditExpensePage extends StatefulWidget {
   final Expense? editedExpense;

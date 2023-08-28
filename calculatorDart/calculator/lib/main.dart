@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'expenses_list_page.dart';
-import 'expense.dart'; // Import your Expense model
+import 'Models/expense.dart'; // Import your Expense model
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
