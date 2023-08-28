@@ -4,6 +4,7 @@ import 'expense.dart';
 import 'main.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'chartwid.dart';
 
 class AddExpensePage extends StatefulWidget {
   final Expense? editedExpense;
@@ -67,6 +68,27 @@ class _AddExpensePageState extends State<AddExpensePage> {
         title: Text(
             widget.editedExpense != null ? 'Edit Expense' : 'Add Expense>>'),
       ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MyApp()));
+              },
+              child: Text("Manage"),
+            ),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => Chart()));
+              },
+              child: Text("Analysis"),
+            ),
+          ],
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -116,14 +138,28 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     }
                   });
                 },
-                child: Text('Date: ${_selectedDate.toString()}'),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.grey,
+                  padding:
+                      EdgeInsets.all(8), // Equal padding for width and height
+                  minimumSize: Size(
+                      10, 10), // Set both width and height to the same value
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Pick a Date',
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
-              SizedBox(height: 16),
+              SizedBox(
+                height: 5,
+                width: 5,
+              ),
               ElevatedButton(
                 onPressed: _submitForm,
-                child: Text(widget.editedExpense != null
-                    ? 'Save Changes'
-                    : 'Add Expense'),
+                child: Text('Add Expense'),
               ),
             ],
           ),

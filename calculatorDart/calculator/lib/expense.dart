@@ -1,4 +1,5 @@
 class Expense {
+  // The auto-incrementing primary key
   final String title;
   final double amount;
   final DateTime date;

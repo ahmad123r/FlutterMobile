@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:calculator/edit_expense_page.dart';
 import 'package:flutter/material.dart';
 import 'expense.dart';
@@ -5,6 +7,7 @@ import 'expense_item.dart';
 import 'add_expense_page.dart';
 import 'main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'chartwid.dart';
 // Import Firestore
 
 class ExpensesListPage extends StatefulWidget {
@@ -17,51 +20,81 @@ class ExpensesListPage extends StatefulWidget {
 }
 
 class _ExpensesListPageState extends State<ExpensesListPage> {
-  List<Expense> _filteredExpenses = [];
-  late List<Expense> _expenses = [];
-
-  void _deleteExpense(int index) async {
-    // Get the expense that needs to be deleted
-
-    Expense expenseToDelete = _filteredExpenses[index];
-
-    // Get a reference to the Firestore collection
-    CollectionReference expensesCollection =
-        FirebaseFirestore.instance.collection('expenses');
-
-    // Query for the expense document to be deleted
-    QuerySnapshot snapshot = await expensesCollection
-        .where('title', isEqualTo: expenseToDelete.title)
-        .get();
-
-    // Delete the document
-    snapshot.docs.forEach((doc) {
-      doc.reference.delete();
-    });
-  }
-
-  void _filterExpenses(String query) {
-    setState(() {
-      _filteredExpenses = widget.expenses
-          .where((expense) =>
-              expense.title.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
-  void _editExpense(Expense expense) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditExpensePage(editedExpense: expense),
-      ),
-    );
-  }
+  Stream<QuerySnapshot<Map<String, dynamic>>> _expensesStream =
+      FirebaseFirestore.instance.collection('expenses').snapshots();
 
   @override
   void initState() {
     super.initState();
-    _fetchExpenses(); // Fetch expenses when the widget initializes
+    _expensesStream =
+        FirebaseFirestore.instance.collection('expenses').snapshots();
+  }
+
+  Widget _buildExpensesList(QuerySnapshot snapshot) {
+    List<Expense> fetchedExpenses = snapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      return Expense(
+        title: data['title'],
+        amount: data['amount'],
+        date: data['date'].toDate(),
+      );
+    }).toList();
+
+    return ListView.builder(
+      itemCount: fetchedExpenses.length,
+      itemBuilder: (context, index) {
+        return ExpenseItem(
+          expense: fetchedExpenses[index],
+          onDelete: () => _deleteExpense(fetchedExpenses[index].title),
+          onEdit: () => (),
+        );
+      },
+    );
+  }
+
+  void _filterExpenses(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _expensesStream =
+            FirebaseFirestore.instance.collection('expenses').snapshots();
+      } else {
+        _expensesStream = FirebaseFirestore.instance
+            .collection('expenses')
+            .where('title', isGreaterThanOrEqualTo: query.toLowerCase())
+            .where('title', isLessThan: query.toLowerCase() + 'z')
+            .snapshots();
+      }
+    });
+  }
+
+  List<Expense> _filteredExpenses = [];
+  late List<Expense> _expenses = [];
+  void _deleteExpense(String documentTitle) async {
+    try {
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('expenses')
+          .where('title', isEqualTo: documentTitle)
+          .get();
+
+      if (querySnapshot.size > 0) {
+        final documentId = querySnapshot.docs[0].id;
+
+        await Future.microtask(() {
+          setState(() {
+            FirebaseFirestore.instance
+                .collection('expenses')
+                .doc(documentId)
+                .delete();
+          });
+        });
+        _fetchExpenses();
+        print('Document deleted successfully');
+      } else {
+        print('Document not found');
+      }
+    } catch (error) {
+      print('Error deleting document: $error');
+    }
   }
 
   Future<void> _fetchExpenses() async {
@@ -103,18 +136,41 @@ class _ExpensesListPageState extends State<ExpensesListPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _expenses.length,
-              itemBuilder: (context, index) {
-                return ExpenseItem(
-                  expense: _expenses[index],
-                  onDelete: () => _deleteExpense(index),
-                  onEdit: () => _editExpense(_expenses[index]),
-                );
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _expensesStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return _buildExpensesList(snapshot.data!);
+                } else if (snapshot.hasError) {
+                  return Text('Error loading expenses');
+                } else {
+                  return CircularProgressIndicator(); // Show a loading indicator
+                }
               },
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MyApp()));
+              },
+              child: Text("Mange"),
+            ),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => Chart()));
+              },
+              child: Text("Analysis"),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'expense.dart';
 import 'main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'chartwid.dart';
 
 class EditExpensePage extends StatefulWidget {
   final Expense? editedExpense;
@@ -30,12 +31,13 @@ class _AddExpensePageState extends State<EditExpensePage> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      expenses.remove(widget.editedExpense);
+
       final newExpense = Expense(
         title: _title,
         amount: _amount,
         date: _selectedDate,
       );
+
       // Get a reference to the Firestore collection
       CollectionReference expensesCollection =
           FirebaseFirestore.instance.collection('expenses');
@@ -64,6 +66,27 @@ class _AddExpensePageState extends State<EditExpensePage> {
       appBar: AppBar(
         title: Text(
             widget.editedExpense != null ? 'Edit Expense' : 'Add Expense>>'),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MyApp()));
+              },
+              child: Text("Manage"),
+            ),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => Chart()));
+              },
+              child: Text("Analysis"),
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -98,7 +121,7 @@ class _AddExpensePageState extends State<EditExpensePage> {
                 },
                 onSaved: (value) => _amount = double.parse(value!),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
                   showDatePicker(
@@ -114,14 +137,12 @@ class _AddExpensePageState extends State<EditExpensePage> {
                     }
                   });
                 },
-                child: Text('Date: ${_selectedDate.toString()}'),
+                child: Text("Date"),
               ),
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _submitForm,
-                child: Text(widget.editedExpense != null
-                    ? 'Save Changes'
-                    : 'Add Expense'),
+                child: Text('Save Changes'),
               ),
             ],
           ),
