@@ -69,6 +69,12 @@ class _ExpensesListPageState extends State<ExpensesListPage> {
   }
 
   void _editExpense(String documentId, Expense updatedExpense) async {
+    final editedExpense = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddExpensePage(editedExpense: updatedExpense),
+      ),
+    );
     try {
       await FirebaseFirestore.instance
           .collection('expenses')
